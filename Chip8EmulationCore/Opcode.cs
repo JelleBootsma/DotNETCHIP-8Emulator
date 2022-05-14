@@ -22,7 +22,7 @@ namespace Chip8EmulationCore
     /// 
     /// 
     /// </summary>
-    internal readonly struct Opcode
+    public readonly struct Opcode
     {
         public Opcode(ushort opId, ushort? nnn = null, byte? nn = null, byte? n = null, byte? x = null, byte? y = null)
         {
@@ -39,28 +39,28 @@ namespace Chip8EmulationCore
         /// 
         /// If present, always in p1, p2 and p3
         /// </summary>
-        ushort? NNN { get; }
-        
+        public ushort? NNN { get; }
+
         /// <summary>
         /// 8-bit constant. 
         /// 
         /// If present, always in p2 and p3
         /// </summary>
-        byte? NN { get; }
+        public byte? NN { get; }
 
         /// <summary>
         /// 4-bit constant
         /// 
         /// If present, always in p3
         /// </summary>
-        byte? N { get; }
+        public byte? N { get; }
 
         /// <summary>
         /// 4-bit Registry identifier
         /// 
         /// If present, always in p1
         /// </summary>
-        byte? X { get; }
+        public byte? X { get; }
 
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace Chip8EmulationCore
         /// 
         /// If present, always in p2
         /// </summary>
-        byte? Y { get; }
+        public byte? Y { get; }
 
         /// <summary>
         /// Opcode, without any data.
@@ -79,7 +79,7 @@ namespace Chip8EmulationCore
         /// Can also end in p0. (such as in 0NNN (OpId = 0)
         /// Can also skip positions, such as with 8XY4 (OpId = 84) 
         /// </summary>
-        ushort OpId { get; }
+        public ushort OpId { get; }
 
     }
 }

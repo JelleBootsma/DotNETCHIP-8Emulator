@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace Chip8EmulationCore
 {
-    internal class OpParser
+    public static class OpParser
     {
 
-        Opcode Parse(ushort rawOp)
+        public static Opcode Parse(ushort rawOp)
         {
             // Only ops where OpId == rawOp are 0x00E0 and 0x00EE
             if (rawOp == 0x00E0 || rawOp == 0x00EE) return new Opcode(rawOp);
@@ -56,7 +56,7 @@ namespace Chip8EmulationCore
                 p0 == 0xF)
                 return new Opcode((ushort)((p0 << 8) | (p2 << 4) | p3), x: p1);
 
-            throw new InvalidDataException($"opcode 0x{rawOp.ToString("X2")} is not a valid CHIP-8 operation");
+            throw new InvalidDataException($"opcode 0x{rawOp:X2} is not a valid CHIP-8 operation");
         }
 
 
