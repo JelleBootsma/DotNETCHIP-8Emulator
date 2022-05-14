@@ -23,14 +23,18 @@ namespace Chip8EmulationCore
 
 
         private readonly IDisplay _display;
-        private readonly ISound _sound;
+        private readonly ISoundHandler _sound;
+        private readonly DelayTimer _delayTimer;
+        private readonly SoundTimer _soundTimer;
 
         private readonly Dictionary<ushort, Action<Opcode>> _Operations;
 
-        public Cpu(IDisplay display, ISound sound)
+        public Cpu(IDisplay display, ISoundHandler sound)
         {
             _display = display ?? throw new ArgumentNullException(nameof(display));
             _sound = sound ?? throw new ArgumentNullException(nameof(sound));
+            _delayTimer = new DelayTimer();
+            _soundTimer = new SoundTimer(sound);
 
             _Operations = new Dictionary<ushort, Action<Opcode>>() {
                 { 0x0   , CMCR},
@@ -59,10 +63,10 @@ namespace Chip8EmulationCore
                 { 0xD   , Display },
                 { 0xE9E , null },
                 { 0xEA1 , null },
-                { 0xF07 , null },
+                { 0xF07 , ReadDelayTimerToVx },
                 { 0xF0A , null },
-                { 0xF15 , null },
-                { 0xF18 , null },
+                { 0xF15 , SetDelayTimerFromVx },
+                { 0xF18 , SetSoundTimerFromVx },
                 { 0xF1E , null },
                 { 0xF29 , null },
                 { 0xF33 , null },
@@ -420,6 +424,33 @@ namespace Chip8EmulationCore
             );
 
         #endregion OpType Rand
+
+        #region OpType Timer
+
+        /// <summary>
+        /// Sets VX to the value of the delay timer
+        /// </summary>
+        /// <param name="op"></param>
+        private void ReadDelayTimerToVx(Opcode op) =>
+            _v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] = _delayTimer.Value;
+        
+
+        /// <summary>
+        /// Sets the delay timer to VX
+        /// </summary>
+        /// <param name="op"></param>
+        /// <exception cref="InvalidOperationException"></exception>
+        private void SetDelayTimerFromVx(Opcode op) =>
+            _delayTimer.Value = _v[op.X ?? throw new InvalidOperationException("Missing X from opcode")];
+
+        /// <summary>
+        /// Sets the sound timer to VX
+        /// </summary>
+        /// <param name="op"></param>
+        /// <exception cref="InvalidOperationException"></exception>
+        private void SetSoundTimerFromVx(Opcode op) =>
+            _soundTimer.Value = _v[op.X ?? throw new InvalidOperationException("Missing X from opcode")];
+        #endregion OpType Timer
 
         #endregion OpActions
     }
