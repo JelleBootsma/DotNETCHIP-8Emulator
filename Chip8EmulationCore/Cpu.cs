@@ -73,15 +73,6 @@ namespace Chip8EmulationCore
         }
 
         #region PcLogic
-        /// <summary>
-        /// push byte to stack
-        /// 
-        /// Stores data at current stack address, and increases stackpointer by 1
-        /// </summary>
-        private void PushToStack(byte data)
-        {
-            _stack[_sp++] = data;
-        }
 
         /// <summary>
         /// Pop byte from stack,
@@ -94,6 +85,15 @@ namespace Chip8EmulationCore
             return _stack[--_sp];
         }
 
+        /// <summary>
+        /// push byte to stack
+        /// 
+        /// Stores data at current stack address, and increases stackpointer by 1
+        /// </summary>
+        private void PushToStack(byte data)
+        {
+            _stack[_sp++] = data;
+        }
 
         /// <summary>
         /// Push a ushort to the stack
@@ -346,6 +346,7 @@ namespace Chip8EmulationCore
         }
 
         #endregion OpType BitOp
+
         #region OpType Math
         /// <summary>
         /// Adds Vy to Vx. 
@@ -419,6 +420,7 @@ namespace Chip8EmulationCore
             );
 
         #endregion OpType Rand
+
         #endregion OpActions
     }
 }
