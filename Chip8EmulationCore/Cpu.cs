@@ -67,11 +67,11 @@ namespace Chip8EmulationCore
                 { 0xF0A , null },
                 { 0xF15 , SetDelayTimerFromVx },
                 { 0xF18 , SetSoundTimerFromVx },
-                { 0xF1E , null },
+                { 0xF1E , AddToI },
                 { 0xF29 , null },
-                { 0xF33 , null },
-                { 0xF55 , null },
-                { 0xF65 , null }
+                { 0xF33 , SetBCD },
+                { 0xF55 , RegisterDump },
+                { 0xF65 , RegisterLoad }
             };
 
         }
@@ -401,6 +401,18 @@ namespace Chip8EmulationCore
 
         #endregion OpType Math
 
+        #region OpType BCD
+
+        private void SetBCD(Opcode op)
+        {
+            var vx = _v[op.X ?? throw new InvalidOperationException("Missing X from opcode")];
+            _memory[_i] = (byte)(vx / 100);
+            _memory[_i + 1] = (byte)((vx % 100) / 10);
+            _memory[_i + 2] = (byte)(vx % 10);
+        }
+
+        #endregion OpType BCD
+
         #region OpType MEM
         /// <summary>
         /// Sets I to the address NNN
@@ -409,6 +421,44 @@ namespace Chip8EmulationCore
         /// <exception cref="InvalidOperationException"></exception>
         private void SetI(Opcode op) =>
             _i = op.NNN ?? throw new InvalidOperationException("Missing address data (NNN) from opcode");
+
+        /// <summary>
+        /// Add Vx to I. Vf is not affected
+        /// </summary>
+        /// <param name="op"></param>
+        /// <exception cref="InvalidOperationException"></exception>
+        private void AddToI(Opcode op) =>
+            _i += _v[op.X ?? throw new InvalidOperationException("Missing X from opcode")];
+
+        /// <summary>
+        /// Stores from V0 to VX (including VX) in memory, starting at address I. 
+        /// The offset from I is increased by 1 for each value written, but I itself is left unmodified
+        /// </summary>
+        /// <param name="op"></param>
+        /// <exception cref="InvalidOperationException"></exception>
+        private void RegisterDump(Opcode op)
+        {
+            var targetAddress = _i;
+            for (int i = 0; i <= (op.X ?? throw new InvalidOperationException("Missing X from opcode")); i++)
+            {
+                _memory[targetAddress++] = _v[i];
+            }
+        }
+
+        /// <summary>
+        /// Fills from V0 to VX (including VX) with values from memory, starting at address I. 
+        /// The offset from I is increased by 1 for each value written, but I itself is left unmodified
+        /// </summary>
+        /// <param name="op"></param>
+        private void RegisterLoad(Opcode op)
+        {
+            var targetAddress = _i;
+            for (int i = 0; i <= (op.X ?? throw new InvalidOperationException("Missing X from opcode")); i++)
+            {
+                _v[i] = _memory[targetAddress++];
+            }
+        }
+
         #endregion OpType MEM
 
         #region OpType Rand
