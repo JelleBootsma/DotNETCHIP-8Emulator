@@ -1,4 +1,5 @@
 ﻿using Chip8EmulationCore.IOInterfaces;
+using Chip8EmulationCore.Utilities;
 
 namespace Chip8EmulationCore
 {
@@ -6,10 +7,13 @@ namespace Chip8EmulationCore
     /// Description of the CHIP-8 CPU.
     /// 
     /// see https://en.wikipedia.org/wiki/CHIP-8#Virtual_machine_description
+    /// Most descriptions and comments for the operations were sourced from here
     /// </summary>
     public class Cpu
     {
-        private const int CLOCK_FREQUENCY = 500;
+        private const double CLOCK_FREQUENCY = 500; // Frequency of the CPU in Hz
+
+        private const int CYCLE_TIME =(int)(1 / CLOCK_FREQUENCY * 1000); // Time per instruction cycle in ms
 
         private readonly byte[] _memory = new byte[4096]; // CHIP-8 has 4k of memory
         private readonly byte[] _v = new byte[16]; // 16 8-bit data registers, named V0 to Vf
@@ -26,7 +30,7 @@ namespace Chip8EmulationCore
         private readonly IKeyPad _keyPad;
         private readonly DelayTimer _delayTimer;
         private readonly SoundTimer _soundTimer;
-
+        private readonly PrecisionClock _cpuClock;
         private readonly Dictionary<ushort, Func<Opcode, ValueTask>> _operations;
 
         public Cpu(IDisplay display, ISoundHandler sound, IKeyPad keyPad)
@@ -35,7 +39,7 @@ namespace Chip8EmulationCore
             _display = display ?? throw new ArgumentNullException(nameof(display));
             _delayTimer = new DelayTimer();
             _soundTimer = new SoundTimer(sound ?? throw new ArgumentNullException(nameof(sound)));
-
+            _cpuClock = new PrecisionClock();
             _operations = new Dictionary<ushort, Func<Opcode, ValueTask>>() {
                 { 0x0   , (op) => WrapInstruction(CMCR, op)},
                 { 0x00E0, (op) => WrapInstruction(Clear, op)},
@@ -76,9 +80,15 @@ namespace Chip8EmulationCore
 
         }
 
+        private async ValueTask ExecuteInstruction(Opcode op)
+        {
+            _cpuClock.StartElapsedTimer();
+            var function = _operations[op.OpId];
+            if (function is not null) await function(op);
+            _cpuClock.BlockUntilElapsed(CYCLE_TIME);
+        }
 
-
-        #region PcLogic
+        #region ProgramLogic
 
         /// <summary>
         /// Pop byte from stack,

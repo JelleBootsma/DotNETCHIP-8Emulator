@@ -12,7 +12,9 @@ namespace Chip8EmulationCore.Utilities.Tests
     [TestClass()]
     public class PrecisionClockTests
     {
-        private PrecisionClock instance = new PrecisionClock();
+        private readonly PrecisionClock instance = new PrecisionClock();
+
+
         [DataTestMethod]
         [DataRow(1)]
         [DataRow(10)]
@@ -32,6 +34,8 @@ namespace Chip8EmulationCore.Utilities.Tests
         [DataRow(10, 11, 1000)]
         [DataRow(100, 500, 100000)]
         [DataRow(10, 10, 10)]
+        [DataRow(10, 9, 10)]
+
         public void BlockUntilElapsedSyncExecutionTest(long blockUntilElapsedMs, long blockUntilElaspedMs2, long loopIterationCount)
         {
             long counter = 0;
@@ -51,7 +55,13 @@ namespace Chip8EmulationCore.Utilities.Tests
             instance.BlockUntilElapsed(blockUntilElaspedMs2);
             sw.Stop();
             Assert.AreEqual(blockUntilElapsedMs, elapsedAfterFirst);
-            Assert.AreEqual(blockUntilElaspedMs2, sw.ElapsedMilliseconds);
+
+            // If blockUntilElaped > blockUntilElaspedMs2 then sw.ElapsedMilliseconds should be equal to blockUntilElaped
+            // Because we already passed the blockuntil, so we should just continue
+            if (blockUntilElapsedMs > blockUntilElaspedMs2)
+                Assert.AreEqual(blockUntilElapsedMs, sw.ElapsedMilliseconds);
+            else
+                Assert.AreEqual(blockUntilElaspedMs2, sw.ElapsedMilliseconds);
 
         }
 
