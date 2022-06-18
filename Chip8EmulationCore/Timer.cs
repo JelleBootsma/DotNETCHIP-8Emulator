@@ -1,4 +1,4 @@
-﻿using Chip8EmulationCore.Interfaces;
+﻿using Chip8EmulationCore.IOInterfaces;
 using Timer = System.Timers.Timer;
 
 namespace Chip8EmulationCore

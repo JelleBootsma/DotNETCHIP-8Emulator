@@ -1,4 +1,4 @@
-﻿using Chip8EmulationCore.Interfaces;
+﻿using Chip8EmulationCore.IOInterfaces;
 
 namespace Chip8EmulationCore
 {
@@ -9,8 +9,7 @@ namespace Chip8EmulationCore
     /// </summary>
     public class Cpu
     {
-        private const byte SCREEN_HEIGHT = 32;
-        private const byte SCREEN_WIDTH = 64;
+        private const int CLOCK_FREQUENCY = 500;
 
         private readonly byte[] _memory = new byte[4096]; // CHIP-8 has 4k of memory
         private readonly byte[] _v = new byte[16]; // 16 8-bit data registers, named V0 to Vf
@@ -19,62 +18,65 @@ namespace Chip8EmulationCore
         private ushort _pc = 0; // Program counter
         private byte _sp = 0; // Stack pointer
 
+
         private readonly byte[] _stack = new byte[64];
 
 
         private readonly IDisplay _display;
-        private readonly ISoundHandler _sound;
+        private readonly IKeyPad _keyPad;
         private readonly DelayTimer _delayTimer;
         private readonly SoundTimer _soundTimer;
 
-        private readonly Dictionary<ushort, Action<Opcode>> _Operations;
+        private readonly Dictionary<ushort, Func<Opcode, ValueTask>> _operations;
 
-        public Cpu(IDisplay display, ISoundHandler sound)
+        public Cpu(IDisplay display, ISoundHandler sound, IKeyPad keyPad)
         {
+            _keyPad = keyPad ?? throw new ArgumentException(nameof(keyPad));
             _display = display ?? throw new ArgumentNullException(nameof(display));
-            _sound = sound ?? throw new ArgumentNullException(nameof(sound));
             _delayTimer = new DelayTimer();
-            _soundTimer = new SoundTimer(sound);
+            _soundTimer = new SoundTimer(sound ?? throw new ArgumentNullException(nameof(sound)));
 
-            _Operations = new Dictionary<ushort, Action<Opcode>>() {
-                { 0x0   , CMCR},
-                { 0x00E0, Clear },
-                { 0x00EE, Return },
-                { 0x1   , Goto },
-                { 0x2   , Call },
-                { 0x3   , CondSkip },
-                { 0x4   , CondSkip },
-                { 0x50  , CondSkip },
-                { 0x6   , Assign },
-                { 0x7   , AddWithoutCarry },
-                { 0x80  , Assign },
-                { 0x81  , BitOr },
-                { 0x82  , BitAnd },
-                { 0x83  , BitXor },
-                { 0x84  , AddWithCarry },
-                { 0x85  , SubtractVyFromVxWithBorrow },
-                { 0x86  , ShiftRight },
-                { 0x87  , SubtractVxFromVyWithBorrow },
-                { 0x8E  , ShiftLeft },
-                { 0x90  , CondSkip },
-                { 0xA   , SetI },
-                { 0xB   , GoToWithV0 },
-                { 0xC   , RandomizeVx },
-                { 0xD   , Display },
-                { 0xE9E , null },
-                { 0xEA1 , null },
-                { 0xF07 , ReadDelayTimerToVx },
-                { 0xF0A , null },
-                { 0xF15 , SetDelayTimerFromVx },
-                { 0xF18 , SetSoundTimerFromVx },
-                { 0xF1E , AddToI },
+            _operations = new Dictionary<ushort, Func<Opcode, ValueTask>>() {
+                { 0x0   , (op) => WrapInstruction(CMCR, op)},
+                { 0x00E0, (op) => WrapInstruction(Clear, op)},
+                { 0x00EE, (op) => WrapInstruction(Return, op)},
+                { 0x1   , (op) => WrapInstruction(Goto, op)},
+                { 0x2   , (op) => WrapInstruction(Call, op)},
+                { 0x3   , (op) => WrapInstruction(CondSkip, op)},
+                { 0x4   , (op) => WrapInstruction(CondSkip, op)},
+                { 0x50  , (op) => WrapInstruction(CondSkip, op)},
+                { 0x6   , (op) => WrapInstruction(Assign, op)},
+                { 0x7   , (op) => WrapInstruction(AddWithoutCarry, op)},
+                { 0x80  , (op) => WrapInstruction(Assign, op)},
+                { 0x81  , (op) => WrapInstruction(BitOr, op)},
+                { 0x82  , (op) => WrapInstruction(BitAnd, op)},
+                { 0x83  , (op) => WrapInstruction(BitXor, op)},
+                { 0x84  , (op) => WrapInstruction(AddWithCarry, op)},
+                { 0x85  , (op) => WrapInstruction(SubtractVyFromVxWithBorrow, op)},
+                { 0x86  , (op) => WrapInstruction(ShiftRight, op)},
+                { 0x87  , (op) => WrapInstruction(SubtractVxFromVyWithBorrow, op)},
+                { 0x8E  , (op) => WrapInstruction(ShiftLeft, op)},
+                { 0x90  , (op) => WrapInstruction(CondSkip, op)},
+                { 0xA   , (op) => WrapInstruction(SetI, op)},
+                { 0xB   , (op) => WrapInstruction(GoToWithV0, op)},
+                { 0xC   , (op) => WrapInstruction(RandomizeVx, op)},
+                { 0xD   , (op) => WrapInstruction(Display, op)},
+                { 0xE9E , (op) => WrapInstruction(SkipInstructionIfKeyVxPressed, op)},
+                { 0xEA1 , (op) => WrapInstruction(SkipInstructionIfKeyVxNotPressed, op)},
+                { 0xF07 , (op) => WrapInstruction(ReadDelayTimerToVx, op)},
+                { 0xF0A , WaitUntilNextKeyPress },
+                { 0xF15 , (op) => WrapInstruction(SetDelayTimerFromVx, op)},
+                { 0xF18 , (op) => WrapInstruction(SetSoundTimerFromVx, op)},
+                { 0xF1E , (op) => WrapInstruction(AddToI, op)},
                 { 0xF29 , null },
-                { 0xF33 , SetBCD },
-                { 0xF55 , RegisterDump },
-                { 0xF65 , RegisterLoad }
+                { 0xF33 , (op) => WrapInstruction(SetBCD, op)},
+                { 0xF55 , (op) => WrapInstruction(RegisterDump, op)},
+                { 0xF65 , (op) => WrapInstruction(RegisterLoad, op)}
             };
 
         }
+
+
 
         #region PcLogic
 
@@ -214,9 +216,9 @@ namespace Chip8EmulationCore
         /// <summary>
         /// Conditional skip
         /// 
-        /// 0x3 => _pc++ if Vx == NN
-        /// 0x4 => _pc++ if Vx != NN
-        /// 0x50 => _pc++ if Vx == Vy
+        /// 0x3 => pc++ iff Vx == NN
+        /// 0x4 => pc++ iff Vx != NN
+        /// 0x50 => pc++ iff Vx == Vy
         /// </summary>
         /// <param name="op"></param>
         /// <exception cref="InvalidOperationException"></exception>
@@ -279,9 +281,9 @@ namespace Chip8EmulationCore
                         op.NN ?? throw new InvalidOperationException("Missing constant (NN) from opcode");
                     return;
                 case 0x80:
-                    _v[op.X ?? 
-                        throw new InvalidOperationException("Missing X from opcode")] = 
-                    _v[op.Y ?? 
+                    _v[op.X ??
+                        throw new InvalidOperationException("Missing X from opcode")] =
+                    _v[op.Y ??
                         throw new InvalidOperationException("Missing Y from opcode")];
                     return;
                 default:
@@ -363,7 +365,7 @@ namespace Chip8EmulationCore
         {
             _v[0xF] = (
                 _v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] +
-                _v[op.Y ?? throw new InvalidOperationException("Missing Y from opcode")] > byte.MaxValue ? 
+                _v[op.Y ?? throw new InvalidOperationException("Missing Y from opcode")] > byte.MaxValue ?
                     (byte)1 : (byte)0);
             _v[op.X.Value] += _v[op.Y.Value];
         }
@@ -379,7 +381,7 @@ namespace Chip8EmulationCore
         {
             _v[0xF] = (
                 _v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] -
-                _v[op.Y ?? throw new InvalidOperationException("Missing Y from opcode")] < byte.MinValue ? 
+                _v[op.Y ?? throw new InvalidOperationException("Missing Y from opcode")] < byte.MinValue ?
                     (byte)0 : (byte)1);
             _v[op.X.Value] -= _v[op.Y.Value];
         }
@@ -403,6 +405,13 @@ namespace Chip8EmulationCore
 
         #region OpType BCD
 
+
+        /// <summary>
+        /// tores the binary-coded decimal representation of VX, with the most significant of three digits at the address in I, the middle digit at I plus 1, and the least significant digit at I plus 2. 
+        /// (In other words, take the decimal representation of VX, place the hundreds digit in memory at location in I, the tens digit at location I+1, and the ones digit at location I+2.);
+        /// </summary>
+        /// <param name="op"></param>
+        /// <exception cref="InvalidOperationException"></exception>
         private void SetBCD(Opcode op)
         {
             var vx = _v[op.X ?? throw new InvalidOperationException("Missing X from opcode")];
@@ -469,7 +478,7 @@ namespace Chip8EmulationCore
         /// <exception cref="InvalidOperationException"></exception>
         private void RandomizeVx(Opcode op) =>
             _v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] = (byte)(
-                (byte)Random.Shared.Next() & 
+                (byte)Random.Shared.Next() &
                 (op.NN ?? throw new InvalidOperationException("Missing constant (NN) from opcode"))
             );
 
@@ -483,7 +492,7 @@ namespace Chip8EmulationCore
         /// <param name="op"></param>
         private void ReadDelayTimerToVx(Opcode op) =>
             _v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] = _delayTimer.Value;
-        
+
 
         /// <summary>
         /// Sets the delay timer to VX
@@ -502,6 +511,55 @@ namespace Chip8EmulationCore
             _soundTimer.Value = _v[op.X ?? throw new InvalidOperationException("Missing X from opcode")];
         #endregion OpType Timer
 
+        #region OpType KeyOp
+
+        /// <summary>
+        /// Skips the next instruction if the key stored in VX is pressed. (Usually the next instruction is a jump to skip a code block);
+        /// 
+        /// VX should not be larger than 0xF
+        /// </summary>
+        /// <param name="op"></param>
+        /// <exception cref="InvalidOperationException"></exception>
+        private void SkipInstructionIfKeyVxPressed(Opcode op)
+        {
+            if (_keyPad.IsKeyPressed(_v[op.X ?? throw new InvalidOperationException("Missing X from opcode")]))
+                _pc++;
+        }
+        /// <summary>
+        /// Skips the next instruction if the key stored in VX is not pressed. (Usually the next instruction is a jump to skip a code block);
+        /// 
+        /// VX should not be larger than 0xF
+        /// </summary>
+        /// <param name="op"></param>
+        /// <exception cref="InvalidOperationException"></exception>
+        private void SkipInstructionIfKeyVxNotPressed(Opcode op)
+        {
+            if (!_keyPad.IsKeyPressed(_v[op.X ?? throw new InvalidOperationException("Missing X from opcode")]))
+                _pc++;
+        }
+
+        /// <summary>
+        /// Await the next keypress, then store the key in VX. Will not continue execution until a key is pressed
+        /// </summary>
+        /// <param name="op"></param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        private async ValueTask WaitUntilNextKeyPress(Opcode op)
+        { 
+            byte keyPressed = await _keyPad.AwaitNextKey();
+            _v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] = keyPressed;
+        }
+
+        #endregion OpType KeyOp
+
         #endregion OpActions
+
+        #region Helpers
+        ValueTask WrapInstruction(Action<Opcode> instruction, Opcode op)
+        {
+            instruction(op);
+            return ValueTask.CompletedTask;
+        }
+        #endregion Helpers
     }
 }

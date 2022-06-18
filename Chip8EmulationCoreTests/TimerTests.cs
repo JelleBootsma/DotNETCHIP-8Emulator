@@ -6,8 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Moq;
-using Chip8EmulationCore.Interfaces;
 using System.Threading;
+using Chip8EmulationCore.IOInterfaces;
 
 namespace Chip8EmulationCore.Tests
 {

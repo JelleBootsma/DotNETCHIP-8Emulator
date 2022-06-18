@@ -1,4 +1,4 @@
-﻿using Chip8EmulationCore.Interfaces;
+﻿using Chip8EmulationCore.IOInterfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Chip8EmulationCore
 {
-    public class DisplayBase : IDisplay
+    public abstract class DisplayBase : IDisplay
     {
         protected readonly byte[] _buffer = new byte[256]; // 64x32 pixels => 8 * 32 bytes => 256 bytes for buffer
 
