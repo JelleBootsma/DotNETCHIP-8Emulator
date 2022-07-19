@@ -13,7 +13,7 @@ namespace Chip8EmulationCore
     {
         private const double CLOCK_FREQUENCY = 500; // Frequency of the CPU in Hz
 
-        private const int CYCLE_TIME =(int)(1 / CLOCK_FREQUENCY * 1000); // Time per instruction cycle in ms
+        private const int CYCLE_TIME = (int)(1 / CLOCK_FREQUENCY * 1000); // Time per instruction cycle in ms
 
         private readonly byte[] _memory = new byte[4096]; // CHIP-8 has 4k of memory
         private readonly byte[] _v = new byte[16]; // 16 8-bit data registers, named V0 to Vf
@@ -86,20 +86,21 @@ namespace Chip8EmulationCore
         public async Task StartEmulator(CancellationToken cancellationToken = default)
         {
             while (!cancellationToken.IsCancellationRequested)
-                await ExecuteNextInstruction()
+                await ExecuteNextInstruction();
         }
 
         private async ValueTask ExecuteNextInstruction()
         {
             _cpuClock.StartElapsedTimer();
 
+            var op = OpParser.Parse(ReadNextInstruction());
 
             var function = _operations[op.OpId];
-            
-            // All operation implementations are value tasks
+
+            // All operation implementations are valuetasks
             // Only blocking operations wrap an actual task. 
             // All other operations complete synchronously
-            if (function is not null) await function(op);
+            await function(op);
             _cpuClock.BlockUntilElapsed(CYCLE_TIME);
         }
 
@@ -126,6 +127,13 @@ namespace Chip8EmulationCore
         {
             _sp -= 2;
             return (ushort)(_stack[_sp] << 8 | (_stack[_sp + 1] & 0xFF));
+        }
+
+        private ushort ReadNextInstruction()
+        {
+            var op = (ushort)(_memory[_pc] << 8 | (_memory[_pc + 1] & 0xFF));
+            _pc += 2;
+            return op;
         }
 
         #endregion PcLogic
@@ -229,29 +237,30 @@ namespace Chip8EmulationCore
         /// <exception cref="ArgumentException"></exception>
         private void CondSkip(Opcode op)
         {
-            switch (op.OpId) {
+            switch (op.OpId)
+            {
                 case 0x3:
                     if (_v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] ==
                         (op.NN ?? throw new InvalidOperationException("Missing constant (NN) from opcode")))
-                        _pc++;
+                        _pc += 2;
 
                     return;
                 case 0x4:
                     if (_v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] !=
                         (op.NN ?? throw new InvalidOperationException("Missing constant (NN) from opcode")))
-                        _pc++;
+                        _pc+=2;
 
                     return;
                 case 0x50:
                     if (_v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] ==
                         _v[op.Y ?? throw new InvalidOperationException("Missing Y from opcode")])
-                        _pc++;
+                        _pc += 2;
 
                     return;
                 case 0x90:
                     if (_v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] !=
                         _v[op.Y ?? throw new InvalidOperationException("Missing Y from opcode")])
-                        _pc++;
+                        _pc += 2;
 
                     return;
                 default:
@@ -523,7 +532,7 @@ namespace Chip8EmulationCore
         private void SkipInstructionIfKeyVxPressed(Opcode op)
         {
             if (_keyPad.IsKeyPressed(_v[op.X ?? throw new InvalidOperationException("Missing X from opcode")]))
-                _pc++;
+                _pc += 2;
         }
         /// <summary>
         /// Skips the next instruction if the key stored in VX is not pressed. (Usually the next instruction is a jump to skip a code block);
@@ -535,7 +544,7 @@ namespace Chip8EmulationCore
         private void SkipInstructionIfKeyVxNotPressed(Opcode op)
         {
             if (!_keyPad.IsKeyPressed(_v[op.X ?? throw new InvalidOperationException("Missing X from opcode")]))
-                _pc++;
+                _pc += 2;
         }
 
         /// <summary>
@@ -545,7 +554,7 @@ namespace Chip8EmulationCore
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
         private async ValueTask WaitUntilNextKeyPress(Opcode op)
-        { 
+        {
             byte keyPressed = await _keyPad.AwaitNextKey();
             _v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] = keyPressed;
         }
