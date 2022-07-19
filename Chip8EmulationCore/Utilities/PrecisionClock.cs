@@ -40,7 +40,7 @@ namespace Chip8EmulationCore.Utilities
             DelayLogic(_blockUntilElapsedSw, ms, stopClock);
         }
 
-        private void DelayLogic(Stopwatch sw, long ms, bool stopClock)
+        private static void DelayLogic(Stopwatch sw, long ms, bool stopClock)
         {
             while (sw.ElapsedMilliseconds < ms)
                 if (ms - sw.ElapsedMilliseconds > 75)
