@@ -24,6 +24,7 @@ namespace Chip8EmulationCore
 
 
         private readonly byte[] _stack = new byte[64];
+        private readonly Dictionary<byte, ushort> _fontAddresses; // Location of default font sprites in memory
 
 
         private readonly IDisplay _display;
@@ -40,6 +41,8 @@ namespace Chip8EmulationCore
             _delayTimer = new DelayTimer();
             _soundTimer = new SoundTimer(sound ?? throw new ArgumentNullException(nameof(sound)));
             _cpuClock = new PrecisionClock();
+
+            _fontAddresses = Font.LoadFontIntoMemory(_memory, ref _i);
             _operations = new Dictionary<ushort, Func<Opcode, ValueTask>>() {
                 { 0x0   , (op) => WrapInstruction(CMCR, op)},
                 { 0x00E0, (op) => WrapInstruction(Clear, op)},
@@ -72,7 +75,7 @@ namespace Chip8EmulationCore
                 { 0xF15 , (op) => WrapInstruction(SetDelayTimerFromVx, op)},
                 { 0xF18 , (op) => WrapInstruction(SetSoundTimerFromVx, op)},
                 { 0xF1E , (op) => WrapInstruction(AddToI, op)},
-                { 0xF29 , null },
+                { 0xF29 , (op) => WrapInstruction(LoadFontMemoryAddress, op)},
                 { 0xF33 , (op) => WrapInstruction(SetBCD, op)},
                 { 0xF55 , (op) => WrapInstruction(RegisterDump, op)},
                 { 0xF65 , (op) => WrapInstruction(RegisterLoad, op)}
@@ -80,37 +83,27 @@ namespace Chip8EmulationCore
 
         }
 
-        private async ValueTask ExecuteInstruction(Opcode op)
+        public async Task StartEmulator(CancellationToken cancellationToken = default)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+                await ExecuteNextInstruction()
+        }
+
+        private async ValueTask ExecuteNextInstruction()
         {
             _cpuClock.StartElapsedTimer();
+
+
             var function = _operations[op.OpId];
+            
+            // All operation implementations are value tasks
+            // Only blocking operations wrap an actual task. 
+            // All other operations complete synchronously
             if (function is not null) await function(op);
             _cpuClock.BlockUntilElapsed(CYCLE_TIME);
         }
 
         #region ProgramLogic
-
-        /// <summary>
-        /// Pop byte from stack,
-        /// 
-        /// Decreases the stackpointer by 1, and then returns byte at current position
-        /// </summary>
-        /// <returns></returns>
-        private byte PopByteFromStack()
-        {
-            return _stack[--_sp];
-        }
-
-        /// <summary>
-        /// push byte to stack
-        /// 
-        /// Stores data at current stack address, and increases stackpointer by 1
-        /// </summary>
-        private void PushToStack(byte data)
-        {
-            _stack[_sp++] = data;
-        }
-
         /// <summary>
         /// Push a ushort to the stack
         /// 
@@ -229,6 +222,7 @@ namespace Chip8EmulationCore
         /// 0x3 => pc++ iff Vx == NN
         /// 0x4 => pc++ iff Vx != NN
         /// 0x50 => pc++ iff Vx == Vy
+        /// 0x90 => pc++ iff Vx != Vy
         /// </summary>
         /// <param name="op"></param>
         /// <exception cref="InvalidOperationException"></exception>
@@ -237,29 +231,25 @@ namespace Chip8EmulationCore
         {
             switch (op.OpId) {
                 case 0x3:
-                    if (
-                        _v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] ==
+                    if (_v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] ==
                         (op.NN ?? throw new InvalidOperationException("Missing constant (NN) from opcode")))
                         _pc++;
 
                     return;
                 case 0x4:
-                    if (
-                        _v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] !=
+                    if (_v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] !=
                         (op.NN ?? throw new InvalidOperationException("Missing constant (NN) from opcode")))
                         _pc++;
 
                     return;
                 case 0x50:
-                    if (
-                        _v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] ==
+                    if (_v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] ==
                         _v[op.Y ?? throw new InvalidOperationException("Missing Y from opcode")])
                         _pc++;
 
                     return;
                 case 0x90:
-                    if (
-                        _v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] !=
+                    if (_v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] !=
                         _v[op.Y ?? throw new InvalidOperationException("Missing Y from opcode")])
                         _pc++;
 
@@ -561,6 +551,27 @@ namespace Chip8EmulationCore
         }
 
         #endregion OpType KeyOp
+
+        #region OpType FontOp
+
+        /// <summary>
+        /// Sets I to the location of the sprite for the character in VX. 
+        /// Characters 0-F (in hexadecimal) are represented by a 4x5 font.
+        /// </summary>
+        /// <param name="op"></param>
+        /// <exception cref="InvalidOperationException"></exception>
+        /// <exception cref="ArgumentException"></exception>
+        private void LoadFontMemoryAddress(Opcode op)
+        {
+            var locSet = _fontAddresses.TryGetValue(
+                op.X ?? throw new InvalidOperationException("Missing X from opcode"),
+                out ushort newI);
+            if (locSet)
+                _i = newI;
+            else
+                throw new ArgumentException($"Requested font character {op.X:X2} is not loaded");
+        }
+        #endregion OpType FontOp
 
         #endregion OpActions
 
