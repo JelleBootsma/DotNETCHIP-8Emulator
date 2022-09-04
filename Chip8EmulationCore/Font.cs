@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Chip8EmulationCore
+﻿namespace Chip8EmulationCore
 {
     /// <summary>
     /// Class to contain the default chip-8 font.

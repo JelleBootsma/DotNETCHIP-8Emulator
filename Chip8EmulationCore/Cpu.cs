@@ -248,7 +248,7 @@ namespace Chip8EmulationCore
                 case 0x4:
                     if (_v[op.X ?? throw new InvalidOperationException("Missing X from opcode")] !=
                         (op.NN ?? throw new InvalidOperationException("Missing constant (NN) from opcode")))
-                        _pc+=2;
+                        _pc += 2;
 
                     return;
                 case 0x50:

@@ -59,10 +59,11 @@ namespace Chip8EmulationCore
     /// While value > 0, the soundhandler will make sound, 
     /// and automatically stop when value reaches 0
     /// </summary>
-    public class SoundTimer : DelayTimer {
+    public class SoundTimer : DelayTimer
+    {
         private readonly ISoundHandler _soundHandler;
         private bool _playingSound = false;
-        
+
         /// <summary>
         /// True if value > 0
         /// </summary>
@@ -77,14 +78,14 @@ namespace Chip8EmulationCore
             base._timer_Tick(sender, e);
             if (Value > 0 && !_playingSound)
             {
-                _soundHandler.StartSound();
                 _playingSound = true;
+                _soundHandler.StartSound();
                 return;
             }
             if (Value == 0 && _playingSound)
             {
+                _playingSound = false;
                 _soundHandler.StopSound();
-                _playingSound= false;
                 return;
             }
         }

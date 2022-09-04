@@ -1,9 +1,4 @@
 ﻿using Chip8EmulationCore.IOInterfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Chip8EmulationCore
 {
@@ -38,7 +33,7 @@ namespace Chip8EmulationCore
             else
                 for (byte line = 0; line < height; line++)
                 {
-                    ushort originalData = 
+                    ushort originalData =
                         (ushort)(_buffer[8 * (y + line) + offset] << 8 | _buffer[8 * (y + line) + offset + 1]);
 
                     var shift = 8 - (x % 8);
@@ -47,7 +42,7 @@ namespace Chip8EmulationCore
 
                     _buffer[8 * (y + line) + offset] = (byte)(newData >> 8);
                     _buffer[8 * (y + line) + offset + 1] = (byte)(newData & 0xFF);
-                    
+
                     ushort changes = (ushort)(originalData ^ newData);
                     if ((changes & originalData) != 0x0)
                         setToUnset = true;

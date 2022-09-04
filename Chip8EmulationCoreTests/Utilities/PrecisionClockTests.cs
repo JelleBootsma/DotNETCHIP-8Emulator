@@ -1,11 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Chip8EmulationCore.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Chip8EmulationCore.Utilities.Tests
 {
@@ -49,7 +44,7 @@ namespace Chip8EmulationCore.Utilities.Tests
 
             instance.BlockUntilElapsed(blockUntilElapsedMs, false);
             elapsedAfterFirst = sw.ElapsedMilliseconds;
-            
+
             while (counter2 < loopIterationCount)
                 counter2++;
             instance.BlockUntilElapsed(blockUntilElaspedMs2);

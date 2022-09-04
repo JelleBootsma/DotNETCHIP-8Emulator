@@ -1,13 +1,7 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Chip8EmulationCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Chip8EmulationCore.IOInterfaces;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Threading;
-using Chip8EmulationCore.IOInterfaces;
 
 namespace Chip8EmulationCore.Tests
 {
