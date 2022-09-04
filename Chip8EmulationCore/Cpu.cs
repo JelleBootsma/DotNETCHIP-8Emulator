@@ -36,7 +36,7 @@ namespace Chip8EmulationCore
 
         public Cpu(IDisplay display, ISoundHandler sound, IKeyPad keyPad)
         {
-            _keyPad = keyPad ?? throw new ArgumentException(nameof(keyPad));
+            _keyPad = keyPad ?? throw new ArgumentNullException(nameof(keyPad));
             _display = display ?? throw new ArgumentNullException(nameof(display));
             _delayTimer = new DelayTimer();
             _soundTimer = new SoundTimer(sound ?? throw new ArgumentNullException(nameof(sound)));
@@ -83,6 +83,15 @@ namespace Chip8EmulationCore
 
         }
 
+        public void LoadRom(ReadOnlySpan<byte> romData, ushort startLocation = 0x200)
+        {
+            _i = startLocation;
+            var romLength = romData.Length;
+            Span<byte> targetBytes = _memory;
+            targetBytes = targetBytes.Slice(_i, romLength);
+            romData.CopyTo(targetBytes);
+        }
+        
         public async Task StartEmulator(CancellationToken cancellationToken = default)
         {
             while (!cancellationToken.IsCancellationRequested)

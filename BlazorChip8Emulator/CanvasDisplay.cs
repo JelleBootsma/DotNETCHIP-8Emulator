@@ -1,0 +1,107 @@
+﻿using Blazor.Extensions;
+using Blazor.Extensions.Canvas.Canvas2D;
+using Chip8EmulationCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace BlazorChip8Emulator
+{
+    public class CanvasDisplay : DisplayBase
+    {
+        private const string STYLE = "black";
+        private readonly Canvas2DContext _context;
+
+        protected BECanvasComponent _canvasReference;
+        
+        // Canvas should be 2:1 and be a multiple of 64.
+        /// <summary>
+        /// Linear scaling factor of pixels.
+        /// 
+        /// E.G. 640x320 display is factor 10 (64 * 10)x(32 * 10)
+        /// </summary>
+        private readonly int _canvasFactor;
+
+        private bool styleSet = false;
+        /// <summary>
+        /// Canvas should be 2:1 and be a multiple of 64.
+        /// </summary>
+        /// <param name="canvasReference"></param>
+        /// <exception cref="ArgumentException"></exception>
+        public CanvasDisplay(BECanvasComponent canvasReference)
+        {
+            if (canvasReference.Width % 64 != 0)
+                throw new ArgumentException("Width needs to be a multiple of 64");
+            if (canvasReference.Height % 64 != 0)
+                throw new ArgumentException("Height needs to be a multiple of 32");
+            if (canvasReference.Width / canvasReference.Height != 2)
+                throw new ArgumentException("Display aspect ratio needs to be 2:1");
+            _canvasFactor = (int)(canvasReference.Width / 64);
+            _canvasReference = canvasReference;
+            _context = _canvasReference.CreateCanvas2D();
+        }
+
+
+
+        private async Task ExecuteChanges(byte[] changedBytes)
+        {
+            if (!styleSet) 
+            {
+                styleSet = true;
+                await _context.SetFillStyleAsync(STYLE); 
+            }
+
+            var changedPixels = new bool[8];
+            var pixelValues = new bool[8];
+            for (int i = 0; i < changedBytes.Length; i++)
+            {
+                byte change = changedBytes[i];
+                byte valueByte = _buffer[i];
+                ByteToBoolSpan(valueByte, pixelValues);
+                ByteToBoolSpan(change, changedPixels);
+                for (int j = 0; j < changedPixels.Length; j++)
+                {
+                    if (!changedPixels[j]) 
+                        continue;
+                    await SetPixel(pixelValues[j], (i * 8) + j);
+                }
+
+
+            }
+        }
+
+        /// <summary>
+        /// Set a specific chip-8 pixel on or off
+        /// </summary>
+        /// <param name="pixelValue"></param>
+        /// <param name="location">Location of the chip-8 pixel. Indexed from 0 in a Left-to-Right, then downwards fashion</param>
+        /// <returns></returns>
+        private async Task SetPixel(bool pixelValue, int location)
+        {
+            // First calculate the location of the pixel
+            var chip8X = location % Width;
+            var chip8Y = location / Height;
+
+            // Convert those chip-8 coordinates to canvas coordinates
+            var canvasX = chip8X * _canvasFactor;
+            var canvasY = chip8Y * _canvasFactor;
+
+            if (pixelValue)
+                await _context.FillRectAsync(canvasX, canvasY, _canvasFactor, _canvasFactor);
+            else
+                await _context.ClearRectAsync(canvasX, canvasY, _canvasFactor, _canvasFactor);
+        }
+
+        private void ByteToBoolSpan(byte source, Span<bool> target)
+        {
+            for (int i = 7; i >= 0; i--)
+                target[i] = (source & (1 << i)) != 0;
+        }
+
+        protected override void OnBufferChanged(ReadOnlySpan<byte> changedBytes) =>
+            ExecuteChanges(changedBytes.ToArray());
+        
+    }
+}
