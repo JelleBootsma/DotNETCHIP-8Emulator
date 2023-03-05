@@ -13,6 +13,7 @@ namespace Chip8EmulationCore.Utilities.Tests
         [DataTestMethod]
         [DataRow(1)]
         [DataRow(10)]
+        [DataRow(77)]
         [DataRow(100)]
         [DataRow(1000)]
         [DataRow(5000)]
