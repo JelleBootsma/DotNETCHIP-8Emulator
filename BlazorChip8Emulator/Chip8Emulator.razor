@@ -1,0 +1,62 @@
+﻿@using Chip8EmulationCore.IOInterfaces
+@using Chip8EmulationCore
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.JSInterop
+@implements IAsyncDisposable
+@inject IJSRuntime JsRuntime
+
+<InputFile OnChange="LoadFile" />
+<div @ref="_focusDiv" @onkeydown="_keyPad.RegisterKeyDown" @onkeyup="_keyPad.RegisterKeyUp">
+    <BECanvas Width="640" Height="320" @ref="_canvasRef" />
+
+</div>
+
+@code{
+    private BECanvas _canvasRef = null!;
+    private CanvasDisplay _display = null!;
+    private ElementReference _focusDiv;
+    private JsInterop _interop = null!;
+    private BlazorKeyPad _keyPad = new();
+    private ISoundHandler _soundHandler = new NoSoundHandler();
+    private Cpu _core = null!;
+    private Task? _runningEmulatorTask;
+
+    protected override void OnInitialized()
+    {
+        _interop = new(JsRuntime);
+        base.OnInitialized();
+
+    }
+
+    private void LoadFile(InputFileChangeEventArgs e)
+    {
+
+        _core = new Cpu(_display, _soundHandler, _keyPad);
+        byte[] rom;
+        using (var ms = new MemoryStream())
+        using (var stream = e.File.OpenReadStream())
+        {
+            stream.CopyTo(ms);
+            rom = ms.ToArray();
+        }
+        _core.LoadRom(rom);
+        _runningEmulatorTask = _core.StartEmulator();
+        _interop.ClaimFocus(_focusDiv);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (!firstRender)
+            return;
+        _display = new CanvasDisplay(_canvasRef);
+        await _interop.ClaimFocus(_focusDiv);
+        _core = new Cpu(_display, _soundHandler, _keyPad);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_interop is not null)
+            await _interop.DisposeAsync();
+    }
+}

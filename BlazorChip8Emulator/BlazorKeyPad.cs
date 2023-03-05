@@ -1,0 +1,65 @@
+﻿using Chip8EmulationCore.IOInterfaces;
+using Microsoft.AspNetCore.Components.Web;
+using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
+
+namespace BlazorChip8Emulator
+{
+    internal class BlazorKeyPad : IKeyPad
+    {
+        // Future: Make this user configurable
+        private readonly ReadOnlyDictionary<string, byte> _keyMapping = new ReadOnlyDictionary<string, byte>(new Dictionary<string, byte>()
+        {
+            {"1", 0x1 },
+            {"2", 0x2 },
+            {"3", 0x3 },
+            {"4", 0xc },
+            {"Q", 0x4 },
+            {"W", 0x5 },
+            {"E", 0x6 },
+            {"R", 0xD },
+            {"A", 0x7 },
+            {"S", 0x8 },
+            {"D", 0x9 },
+            {"F", 0xE },
+            {"Z", 0xA },
+            {"X", 0x0 },
+            {"C", 0xB },
+            {"V", 0xF },
+        });
+        private readonly ReadOnlyDictionary<byte, string> _reverseKeyMapping;
+        private readonly ConcurrentDictionary<string, bool> _currentlyPressed;
+        private TaskCompletionSource<byte> _nextKeyTask = new();
+        public BlazorKeyPad()
+        {
+            _currentlyPressed = new(_keyMapping.ToDictionary(x => x.Key, x => false));
+            _reverseKeyMapping = new(_keyMapping.ToDictionary(x => x.Value, x => x.Key));
+        }
+
+        public Task<byte> AwaitNextKey()
+        {
+            _nextKeyTask = new TaskCompletionSource<byte>();
+            return _nextKeyTask.Task;
+        }
+
+        public bool IsKeyPressed(byte key)
+        {
+            if (!_reverseKeyMapping.ContainsKey(key))
+                throw new ArgumentOutOfRangeException($"Key should be between 0x0 and 0xF. Received key 0x{key:X2}");
+            return _currentlyPressed[_reverseKeyMapping[key]];
+        }
+
+        internal void RegisterKeyDown(KeyboardEventArgs e)
+        {
+            if (!_keyMapping.ContainsKey(e.Key))
+                return;
+            _currentlyPressed[e.Key] = true;
+            _nextKeyTask.TrySetResult(_keyMapping[e.Key]);
+        }
+        internal void RegisterKeyUp(KeyboardEventArgs e)
+        {
+            if (_keyMapping.ContainsKey(e.Key))
+                _currentlyPressed[e.Key] = false;
+        }
+    }
+}

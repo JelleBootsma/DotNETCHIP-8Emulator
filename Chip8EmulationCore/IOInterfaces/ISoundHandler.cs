@@ -20,4 +20,18 @@
         /// </summary>
         public void StopSound();
     }
+
+    /// <summary>
+    /// Dummy handler for the sound handler. Will not actually make any sound
+    /// </summary>
+    public class NoSoundHandler : ISoundHandler
+    {
+        public void StartSound()
+        {
+        }
+
+        public void StopSound()
+        {
+        }
+    }
 }

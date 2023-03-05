@@ -1,6 +1,5 @@
 ﻿using Chip8EmulationCore.IOInterfaces;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using System.Threading;
 
 namespace Chip8EmulationCore.Tests
@@ -11,8 +10,8 @@ namespace Chip8EmulationCore.Tests
         [TestMethod()]
         public void SoundTimerTest()
         {
-            var handlerMoq = new Mock<ISoundHandler>();
-            var soundTimer = new SoundTimer(handlerMoq.Object);
+            var dummyHandler = new NoSoundHandler();
+            var soundTimer = new SoundTimer(dummyHandler);
             soundTimer.Value = 60;
             Thread.Sleep(167);
             Assert.IsTrue(soundTimer.PlayingSound);

@@ -101,7 +101,7 @@ namespace BlazorChip8Emulator
         }
 
         protected override void OnBufferChanged(ReadOnlySpan<byte> changedBytes) =>
-            ExecuteChanges(changedBytes.ToArray());
+            ExecuteChanges(changedBytes.ToArray()); // Don't await the update of the screen, but let the CPU continue
         
     }
 }
