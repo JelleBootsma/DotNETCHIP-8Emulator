@@ -28,7 +28,7 @@
 
     }
 
-    private void LoadFile(InputFileChangeEventArgs e)
+    private async Task LoadFile(InputFileChangeEventArgs e)
     {
 
         _core = new Cpu(_display, _soundHandler, _keyPad);
@@ -41,7 +41,7 @@
         }
         _core.LoadRom(rom);
         _runningEmulatorTask = _core.StartEmulator();
-        _interop.ClaimFocus(_focusDiv);
+        await _interop.ClaimFocus(_focusDiv);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
