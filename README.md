@@ -64,6 +64,11 @@ Please note that extensions such as CHIP-10, CHIP-8 HiRes, CHIP-8C, and CHIP-8X 
 
 If the problem persists, feel free to open an issue on the project's GitHub repository.
 
+
+## Continuous Integration and Deployment
+This project includes GitHub Actions configuration for continuous integration and deployment (CI/CD). 
+The configured workflow automatically builds and executes unit tests for the DotNETCHIP-8Emulator on each push and pull request to the repository
+
 ## License
 
 This project is licensed under the [MIT License](LICENSE). Feel free to use and modify the code according to the terms of the license.
