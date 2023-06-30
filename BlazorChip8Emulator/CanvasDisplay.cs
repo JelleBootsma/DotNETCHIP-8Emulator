@@ -14,9 +14,8 @@ namespace BlazorChip8Emulator
         private const string STYLE = "black";
         private readonly Canvas2DContext _context;
 
-        protected BECanvasComponent _canvasReference;
+        protected readonly BECanvasComponent _canvasReference;
         
-        // Canvas should be 2:1 and be a multiple of 64.
         /// <summary>
         /// Linear scaling factor of pixels.
         /// 
@@ -30,17 +29,17 @@ namespace BlazorChip8Emulator
         /// </summary>
         /// <param name="canvasReference"></param>
         /// <exception cref="ArgumentException"></exception>
-        public CanvasDisplay(BECanvasComponent canvasReference)
+        public CanvasDisplay(BECanvasComponent canvasReference, Canvas2DContext context)
         {
             if (canvasReference.Width % 64 != 0)
                 throw new ArgumentException("Width needs to be a multiple of 64");
-            if (canvasReference.Height % 64 != 0)
+            if (canvasReference.Height % 32 != 0)
                 throw new ArgumentException("Height needs to be a multiple of 32");
             if (canvasReference.Width / canvasReference.Height != 2)
                 throw new ArgumentException("Display aspect ratio needs to be 2:1");
             _canvasFactor = (int)(canvasReference.Width / 64);
             _canvasReference = canvasReference;
-            _context = _canvasReference.CreateCanvas2D();
+            _context = context;
         }
 
 

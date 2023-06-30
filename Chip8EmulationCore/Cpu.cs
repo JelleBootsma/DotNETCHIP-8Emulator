@@ -85,17 +85,24 @@ namespace Chip8EmulationCore
 
         public void LoadRom(ReadOnlySpan<byte> romData, ushort startLocation = 0x200)
         {
-            _i = startLocation;
+            _pc = startLocation;
             var romLength = romData.Length;
-            Span<byte> targetBytes = _memory;
-            targetBytes = targetBytes.Slice(_i, romLength);
+            Span<byte> targetBytes = ((Span<byte>)_memory).Slice(_pc, romLength);
             romData.CopyTo(targetBytes);
         }
         
         public async Task StartEmulator(CancellationToken cancellationToken = default)
         {
-            while (!cancellationToken.IsCancellationRequested)
-                await ExecuteNextInstruction();
+            try
+            {
+
+                while (!cancellationToken.IsCancellationRequested)
+                    await ExecuteNextInstruction();
+            }
+            catch (Exception e)
+            {
+
+            }
         }
 
         private async ValueTask ExecuteNextInstruction()

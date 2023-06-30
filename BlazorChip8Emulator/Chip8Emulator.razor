@@ -1,4 +1,5 @@
-﻿@using Chip8EmulationCore.IOInterfaces
+﻿@using Blazor.Extensions;
+@using Chip8EmulationCore.IOInterfaces
 @using Chip8EmulationCore
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.JSInterop
@@ -12,7 +13,7 @@
 </div>
 
 @code{
-    private BECanvas _canvasRef = null!;
+    private BECanvasComponent _canvasRef = null!;
     private CanvasDisplay _display = null!;
     private ElementReference _focusDiv;
     private JsInterop _interop = null!;
@@ -20,6 +21,7 @@
     private ISoundHandler _soundHandler = new NoSoundHandler();
     private Cpu _core = null!;
     private Task? _runningEmulatorTask;
+    private CancellationTokenSource? _runningEmulatorCancellationSource;
 
     protected override void OnInitialized()
     {
@@ -28,19 +30,33 @@
 
     }
 
-    private async Task LoadFile(InputFileChangeEventArgs e)
+    private async Task LoadFile(InputFileChangeEventArgs fileSelectEvent)
     {
+        const long MAX_ALLOWED_SIZE = 512_000;
+
+        // Cancel the runnning emulator (if there is an emulator running)
+        if (_runningEmulatorCancellationSource is not null)
+            _runningEmulatorCancellationSource.Cancel();
 
         _core = new Cpu(_display, _soundHandler, _keyPad);
+        _display.Clear();
+
         byte[] rom;
-        using (var ms = new MemoryStream())
-        using (var stream = e.File.OpenReadStream())
+        if (fileSelectEvent.File.Size > MAX_ALLOWED_SIZE || fileSelectEvent.File.Size < 0)
+            throw new ArgumentOutOfRangeException(nameof(fileSelectEvent), $"Input file too large or too small; Size: {fileSelectEvent.File.Size}");
+
+        using (var ms = new MemoryStream((int)fileSelectEvent.File.Size))
+        using (var stream = fileSelectEvent.File.OpenReadStream())
         {
-            stream.CopyTo(ms);
+            await stream.CopyToAsync(ms);
             rom = ms.ToArray();
         }
+
         _core.LoadRom(rom);
-        _runningEmulatorTask = _core.StartEmulator();
+        _runningEmulatorCancellationSource = new();
+
+        // Run the emulator on a background thread
+        _runningEmulatorTask = Task.Run(() => _core.StartEmulator(_runningEmulatorCancellationSource.Token));
         await _interop.ClaimFocus(_focusDiv);
     }
 
@@ -49,7 +65,8 @@
         await base.OnAfterRenderAsync(firstRender);
         if (!firstRender)
             return;
-        _display = new CanvasDisplay(_canvasRef);
+        var context = await _canvasRef.CreateCanvas2DAsync();
+        _display = new CanvasDisplay(_canvasRef, context);
         await _interop.ClaimFocus(_focusDiv);
         _core = new Cpu(_display, _soundHandler, _keyPad);
     }

@@ -8,6 +8,17 @@ namespace BlazorChip8Emulator
     internal class BlazorKeyPad : IKeyPad
     {
         // Future: Make this user configurable
+        // For now the following mapping is used
+        // Original Keypad     Mapped Keys
+        // +-+-+-+-+          +-+-+-+-+
+        // |1|2|3|C|          |1|2|3|4|
+        // +-+-+-+-+    ===>  +-+-+-+-+
+        // |4|5|6|D|          |Q|W|E|R|
+        // +-+-+-+-+          +-+-+-+-+
+        // |7|8|9|E|          |A|S|D|F|
+        // +-+-+-+-+          +-+-+-+-+
+        // |A|0|B|F|          |Z|X|C|V|
+        // +-+-+-+-+          +-+-+-+-+
         private readonly ReadOnlyDictionary<string, byte> _keyMapping = new ReadOnlyDictionary<string, byte>(new Dictionary<string, byte>()
         {
             {"1", 0x1 },

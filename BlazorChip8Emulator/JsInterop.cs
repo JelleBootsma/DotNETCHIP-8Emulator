@@ -19,7 +19,7 @@ namespace BlazorChip8Emulator
         public async ValueTask ClaimFocus(ElementReference element)
         {
             var module = await moduleTask.Value;
-            await module.InvokeVoidAsync("setFocus", element);
+            await module.InvokeVoidAsync("SetFocus", element);
         }
 
         public async ValueTask DisposeAsync()
