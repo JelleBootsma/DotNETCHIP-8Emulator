@@ -1,12 +1,16 @@
-﻿using Chip8EmulationCore.IOInterfaces;
-
-namespace Chip8EmulationCore
+﻿namespace Chip8EmulationCore.IO
 {
     public abstract class DisplayBase : IDisplay
     {
         public const int Width = 64;
         public const int Height = 32;
-        protected readonly byte[] _buffer = new byte[256]; // 64x32 pixels => 8 * 32 bytes => 256 bytes for buffer
+
+        // 64x32 pixels => 8 * 32 bytes => 256 bytes for buffer
+        /// <summary>
+        /// Display buffer for pixel information.
+        /// Big endian layout
+        /// </summary>
+        protected readonly byte[] _buffer = new byte[256];
 
         /// <summary>
         /// This method is called after the memory in the basedisplay is changed.
@@ -41,9 +45,17 @@ namespace Chip8EmulationCore
                 {
                     var originalData = _buffer[8 * (y + line) + offset];
                     var newData = (byte)(originalData ^ spriteData[line]);
+
+
+                    // Write new data to buffer
                     _buffer[8 * (y + line) + offset] = newData;
+
+                    // Calculate changed pixels in this line
                     byte changes = (byte)(originalData ^ newData);
+
+                    // Mark changed bytes in changes array
                     changeLocations[8 * (y + line) + offset] = changes;
+
                     if ((changes & originalData) != 0x0)
                         setToUnset = true;
                 }
@@ -53,20 +65,20 @@ namespace Chip8EmulationCore
                     ushort originalData =
                         (ushort)(_buffer[8 * (y + line) + offset] << 8 | _buffer[8 * (y + line) + offset + 1]);
 
-                    var shift = 8 - (x % 8);
+                    var shift = 8 - x % 8;
                     ushort spriteLine = (ushort)(spriteData[line] << shift);
                     var newData = (ushort)(originalData ^ spriteLine);
 
                     // Write new data to buffer
-                    _buffer[8 * (y + line) + offset] = (byte)(newData >> 8);
                     _buffer[8 * (y + line) + offset + 1] = (byte)(newData & 0xFF);
+                    _buffer[8 * (y + line) + offset] = (byte)(newData >> 8);
 
                     // Calculate changed pixels in this line
                     ushort changes = (ushort)(originalData ^ newData);
 
                     // Mark changed bytes in changes array
-                    changeLocations[8 * (y + line) + offset] = (byte)(changes >> 8);
                     changeLocations[8 * (y + line) + offset + 1] = (byte)(changes & 0xFF);
+                    changeLocations[8 * (y + line) + offset] = (byte)(changes >> 8);
 
                     if ((changes & originalData) != 0x0)
                         setToUnset = true;

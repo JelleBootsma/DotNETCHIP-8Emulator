@@ -1,7 +1,7 @@
-﻿using Chip8EmulationCore.IOInterfaces;
+﻿using Chip8EmulationCore.IO;
 using Timer = System.Timers.Timer;
 
-namespace Chip8EmulationCore
+namespace Chip8EmulationCore.Utilities
 {
     /// <summary>
     /// Delay timer, ticks down at 60Hz, while value can be set and read.
@@ -20,7 +20,7 @@ namespace Chip8EmulationCore
         public DelayTimer()
         {
             _timer = new Timer(Math.Round(1000f / TIMER_FREQUENCY));
-            _timer.Elapsed += _timer_Tick;
+            _timer.Elapsed += Timer_Tick;
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Chip8EmulationCore
                 _timer.Start();
             }
         }
-        protected virtual void _timer_Tick(object? sender, EventArgs args)
+        protected virtual void Timer_Tick(object? sender, EventArgs args)
         {
             if (Value == 0)
             {
@@ -73,9 +73,9 @@ namespace Chip8EmulationCore
             _soundHandler = soundHandler ?? throw new ArgumentNullException(nameof(soundHandler));
         }
 
-        protected override void _timer_Tick(object? sender, EventArgs e)
+        protected override void Timer_Tick(object? sender, EventArgs e)
         {
-            base._timer_Tick(sender, e);
+            base.Timer_Tick(sender, e);
             if (Value > 0 && !_playingSound)
             {
                 _playingSound = true;

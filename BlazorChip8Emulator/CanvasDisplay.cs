@@ -1,6 +1,6 @@
 ﻿using Blazor.Extensions;
 using Blazor.Extensions.Canvas.Canvas2D;
-using Chip8EmulationCore;
+using Chip8EmulationCore.IO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +11,7 @@ namespace BlazorChip8Emulator
 {
     public class CanvasDisplay : DisplayBase
     {
-        private const string STYLE = "black";
+        private const string FILL_COLOUR = "white";
         private readonly Canvas2DContext _context;
 
         protected readonly BECanvasComponent _canvasReference;
@@ -46,28 +46,35 @@ namespace BlazorChip8Emulator
 
         private async Task ExecuteChanges(byte[] changedBytes)
         {
-            if (!styleSet) 
-            {
-                styleSet = true;
-                await _context.SetFillStyleAsync(STYLE); 
-            }
+            await EnsureStyleSet();
 
             var changedPixels = new bool[8];
             var pixelValues = new bool[8];
-            for (int i = 0; i < changedBytes.Length; i++)
+            // Explicit batching of draw calls
+
+            await _context.BeginBatchAsync();
+            for (int i = 0; i < 256; i++)
             {
                 byte change = changedBytes[i];
                 byte valueByte = _buffer[i];
                 ByteToBoolSpan(valueByte, pixelValues);
                 ByteToBoolSpan(change, changedPixels);
-                for (int j = 0; j < changedPixels.Length; j++)
+                for (int j = 0; j < 8; j++)
                 {
-                    if (!changedPixels[j]) 
+                    if (!changedPixels[j])
                         continue;
                     await SetPixel(pixelValues[j], (i * 8) + j);
                 }
+            }
+            await _context.EndBatchAsync();
+        }
 
-
+        private async ValueTask EnsureStyleSet()
+        {
+            if (!styleSet)
+            {
+                styleSet = true;
+                await _context.SetFillStyleAsync(FILL_COLOUR);
             }
         }
 
@@ -81,7 +88,7 @@ namespace BlazorChip8Emulator
         {
             // First calculate the location of the pixel
             var chip8X = location % Width;
-            var chip8Y = location / Height;
+            var chip8Y = location / Width;
 
             // Convert those chip-8 coordinates to canvas coordinates
             var canvasX = chip8X * _canvasFactor;
@@ -95,8 +102,8 @@ namespace BlazorChip8Emulator
 
         private void ByteToBoolSpan(byte source, Span<bool> target)
         {
-            for (int i = 7; i >= 0; i--)
-                target[i] = (source & (1 << i)) != 0;
+            for (int i = 0; i < 8; i++)
+                target[i] = (source & (0x80 >> i)) != 0;
         }
 
         protected override void OnBufferChanged(ReadOnlySpan<byte> changedBytes) =>

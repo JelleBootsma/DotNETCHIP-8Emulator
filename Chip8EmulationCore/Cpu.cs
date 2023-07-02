@@ -1,4 +1,4 @@
-﻿using Chip8EmulationCore.IOInterfaces;
+﻿using Chip8EmulationCore.IO;
 using Chip8EmulationCore.Utilities;
 
 namespace Chip8EmulationCore

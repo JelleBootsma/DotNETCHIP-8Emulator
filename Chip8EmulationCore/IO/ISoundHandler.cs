@@ -1,4 +1,4 @@
-﻿namespace Chip8EmulationCore.IOInterfaces
+﻿namespace Chip8EmulationCore.IO
 {
     /// <summary>
     /// Simple interface for CHIP-8 sound.

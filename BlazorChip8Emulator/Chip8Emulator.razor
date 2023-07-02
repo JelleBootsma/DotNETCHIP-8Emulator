@@ -1,13 +1,12 @@
-﻿@using Blazor.Extensions;
-@using Chip8EmulationCore.IOInterfaces
+﻿@using Blazor.Extensions
+@using Chip8EmulationCore.IO
 @using Chip8EmulationCore
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.JSInterop
-@implements IAsyncDisposable
 @inject IJSRuntime JsRuntime
 
-<InputFile OnChange="LoadFile" />
-<div @ref="_focusDiv" @onkeydown="_keyPad.RegisterKeyDown" @onkeyup="_keyPad.RegisterKeyUp">
+<InputFile OnChange="LoadFile" class="focusDiv" />
+<div class="focusDiv" @ref="_focusDiv" @onkeydown="_keyPad.RegisterKeyDown" @onkeyup="_keyPad.RegisterKeyUp">
     <BECanvas Width="640" Height="320" @ref="_canvasRef" />
 
 </div>
@@ -16,7 +15,6 @@
     private BECanvasComponent _canvasRef = null!;
     private CanvasDisplay _display = null!;
     private ElementReference _focusDiv;
-    private JsInterop _interop = null!;
     private BlazorKeyPad _keyPad = new();
     private ISoundHandler _soundHandler = new NoSoundHandler();
     private Cpu _core = null!;
@@ -25,7 +23,6 @@
 
     protected override void OnInitialized()
     {
-        _interop = new(JsRuntime);
         base.OnInitialized();
 
     }
@@ -57,7 +54,17 @@
 
         // Run the emulator on a background thread
         _runningEmulatorTask = Task.Run(() => _core.StartEmulator(_runningEmulatorCancellationSource.Token));
-        await _interop.ClaimFocus(_focusDiv);
+
+        // Keep focus on the correct div
+        _ = Task.Run(async () =>
+        {
+
+            for (int i = 0; i < 50; i++)
+            {
+                await _focusDiv.FocusAsync();
+                await Task.Delay(1000);
+            }
+        });
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -67,13 +74,8 @@
             return;
         var context = await _canvasRef.CreateCanvas2DAsync();
         _display = new CanvasDisplay(_canvasRef, context);
-        await _interop.ClaimFocus(_focusDiv);
+        await _focusDiv.FocusAsync();
         _core = new Cpu(_display, _soundHandler, _keyPad);
     }
 
-    public async ValueTask DisposeAsync()
-    {
-        if (_interop is not null)
-            await _interop.DisposeAsync();
-    }
 }

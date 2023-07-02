@@ -1,4 +1,4 @@
-﻿namespace Chip8EmulationCore.IOInterfaces
+﻿namespace Chip8EmulationCore.IO
 {
     /// <summary>
     /// Interface for the Chip-8 controller. This controller is a 4x4 keypad

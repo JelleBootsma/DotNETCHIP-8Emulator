@@ -1,4 +1,4 @@
-﻿using Chip8EmulationCore.IOInterfaces;
+﻿using Chip8EmulationCore.IO;
 using Microsoft.AspNetCore.Components.Web;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
@@ -62,7 +62,7 @@ namespace BlazorChip8Emulator
 
         internal void RegisterKeyDown(KeyboardEventArgs e)
         {
-            if (!_keyMapping.ContainsKey(e.Key))
+            if (!_keyMapping.ContainsKey(e.Code))
                 return;
             _currentlyPressed[e.Key] = true;
             _nextKeyTask.TrySetResult(_keyMapping[e.Key]);

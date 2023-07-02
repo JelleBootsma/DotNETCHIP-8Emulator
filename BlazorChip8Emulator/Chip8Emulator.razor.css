@@ -1,6 +1,11 @@
-﻿.my-component {
+﻿.focusDiv {
+    width: fit-content;
+    width: -moz-fit-content;
+    height: fit-content;
+    height: -moz-fit-content;
+    margin-left: auto;
+    margin-right: auto;
+}
+.focusDiv:focus {
     border: 2px dashed red;
-    padding: 1em;
-    margin: 1em 0;
-    background-image: url('background.png');
 }
