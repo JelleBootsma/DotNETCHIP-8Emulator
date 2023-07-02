@@ -22,7 +22,9 @@
     }
 
     /// <summary>
-    /// Dummy handler for the sound handler. Will not actually make any sound
+    /// Dummy handler for the sound handler. Will not actually make any sound.
+    /// 
+    /// To be used in cases where no sound is supported / desired
     /// </summary>
     public class NoSoundHandler : ISoundHandler
     {

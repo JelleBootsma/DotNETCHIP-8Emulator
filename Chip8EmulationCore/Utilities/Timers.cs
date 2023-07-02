@@ -10,7 +10,7 @@ namespace Chip8EmulationCore.Utilities
     /// </summary>
     public class DelayTimer
     {
-        private const float TIMER_FREQUENCY = 60;
+        private const double TIMER_FREQUENCY = 60;
         private byte _value = 0;
         private readonly Timer _timer;
 
@@ -19,7 +19,7 @@ namespace Chip8EmulationCore.Utilities
         /// </summary>
         public DelayTimer()
         {
-            _timer = new Timer(Math.Round(1000f / TIMER_FREQUENCY));
+            _timer = new Timer(Math.Round(1000d / TIMER_FREQUENCY));
             _timer.Elapsed += Timer_Tick;
         }
 

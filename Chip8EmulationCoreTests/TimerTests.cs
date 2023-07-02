@@ -28,7 +28,14 @@ namespace Chip8EmulationCore.Tests
             Assert.AreEqual(60, delayTimer.Value);
             Thread.Sleep(1100);
             Assert.AreEqual(0, delayTimer.Value);
-            Thread.Sleep(100);
+        }
+        [TestMethod()]
+        public void DelayTimerRestartTest()
+        {
+            var delayTimer = new DelayTimer();
+            delayTimer.Value = 60;
+            Assert.AreEqual(60, delayTimer.Value);
+            Thread.Sleep(2000);
 
             // Test if timer can be restarted
             delayTimer.Value = 60;
