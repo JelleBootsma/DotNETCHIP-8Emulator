@@ -1,4 +1,5 @@
-﻿using Chip8EmulationCore.IOInterfaces;
+﻿using Chip8EmulationCore.IO;
+using Chip8EmulationCore.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading;
 

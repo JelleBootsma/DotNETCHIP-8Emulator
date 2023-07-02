@@ -6,7 +6,7 @@ namespace Chip8EmulationCore.Tests
     public class OpParserTests
     {
         [DataTestMethod]
-        //          RAW OP              Op Id           NNN             NN          N           X           Y
+        //          RAW OP,         Op Id,          NNN,      NN,   N,    X,    Y
         [DataRow((ushort)0x0123, (ushort)0x0, (ushort)0x123, null, null, null, null)] // 0NNN
         [DataRow((ushort)0x00E0, (ushort)0x00E0, null, null, null, null, null)] // 00E0
         [DataRow((ushort)0x00EE, (ushort)0x00EE, null, null, null, null, null)] // 00EE
