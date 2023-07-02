@@ -90,19 +90,12 @@ namespace Chip8EmulationCore
             Span<byte> targetBytes = ((Span<byte>)_memory).Slice(_pc, romLength);
             romData.CopyTo(targetBytes);
         }
-        
+
         public async Task StartEmulator(CancellationToken cancellationToken = default)
         {
-            try
-            {
+            while (!cancellationToken.IsCancellationRequested)
+                await ExecuteNextInstruction();
 
-                while (!cancellationToken.IsCancellationRequested)
-                    await ExecuteNextInstruction();
-            }
-            catch (Exception e)
-            {
-
-            }
         }
 
         private async ValueTask ExecuteNextInstruction()

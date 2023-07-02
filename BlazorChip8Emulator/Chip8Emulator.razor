@@ -12,7 +12,7 @@
 </div>
 
 @code{
-    private BECanvasComponent _canvasRef = null!;
+    private BECanvasComponent? _canvasRef = null!;
     private CanvasDisplay _display = null!;
     private ElementReference _focusDiv;
     private BlazorKeyPad _keyPad = new();
@@ -70,7 +70,7 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
-        if (!firstRender)
+        if (!firstRender || _canvasRef is null)
             return;
         var context = await _canvasRef.CreateCanvas2DAsync();
         _display = new CanvasDisplay(_canvasRef, context);
