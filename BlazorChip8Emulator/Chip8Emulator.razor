@@ -5,13 +5,15 @@
 @using Microsoft.JSInterop
 @inject IJSRuntime JsRuntime
 
-<InputFile OnChange="LoadFile" class="focusDiv" />
-<div class="focusDiv" @ref="_focusDiv" @onkeydown="_keyPad.RegisterKeyDown" @onkeyup="_keyPad.RegisterKeyUp">
+<div tabindex="0" class="focusDiv" @ref="_focusDiv" @onkeydown="_keyPad.RegisterKeyDown" @onkeyup="_keyPad.RegisterKeyUp">
     <BECanvas Width="640" Height="320" @ref="_canvasRef" />
 
 </div>
 
 @code{
+    [Parameter]
+    public byte[]? RomData { get; set; }
+
     private BECanvasComponent? _canvasRef = null!;
     private CanvasDisplay _display = null!;
     private ElementReference _focusDiv;
@@ -21,50 +23,13 @@
     private Task? _runningEmulatorTask;
     private CancellationTokenSource? _runningEmulatorCancellationSource;
 
-    protected override void OnInitialized()
+    protected override async Task OnParametersSetAsync()
     {
-        base.OnInitialized();
+        await base.OnParametersSetAsync();
 
-    }
-
-    private async Task LoadFile(InputFileChangeEventArgs fileSelectEvent)
-    {
-        const long MAX_ALLOWED_SIZE = 512_000;
-
-        // Cancel the runnning emulator (if there is an emulator running)
-        if (_runningEmulatorCancellationSource is not null)
-            _runningEmulatorCancellationSource.Cancel();
-
-        _core = new Cpu(_display, _soundHandler, _keyPad);
-        _display.Clear();
-
-        byte[] rom;
-        if (fileSelectEvent.File.Size > MAX_ALLOWED_SIZE || fileSelectEvent.File.Size < 0)
-            throw new ArgumentOutOfRangeException(nameof(fileSelectEvent), $"Input file too large or too small; Size: {fileSelectEvent.File.Size}");
-
-        using (var ms = new MemoryStream((int)fileSelectEvent.File.Size))
-        using (var stream = fileSelectEvent.File.OpenReadStream())
-        {
-            await stream.CopyToAsync(ms);
-            rom = ms.ToArray();
-        }
-
-        _core.LoadRom(rom);
-        _runningEmulatorCancellationSource = new();
-
-        // Run the emulator on a background thread
-        _runningEmulatorTask = Task.Run(() => _core.StartEmulator(_runningEmulatorCancellationSource.Token));
-
-        // Keep focus on the correct div
-        _ = Task.Run(async () =>
-        {
-
-            for (int i = 0; i < 50; i++)
-            {
-                await _focusDiv.FocusAsync();
-                await Task.Delay(1000);
-            }
-        });
+        if (_display is null)
+            return;
+        await LoadRomAndStartEmulator();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -74,8 +39,41 @@
             return;
         var context = await _canvasRef.CreateCanvas2DAsync();
         _display = new CanvasDisplay(_canvasRef, context);
-        await _focusDiv.FocusAsync();
-        _core = new Cpu(_display, _soundHandler, _keyPad);
+
+
+        await LoadRomAndStartEmulator();
     }
 
+
+    private async Task LoadRomAndStartEmulator()
+    {
+        // Cancel the runnning emulator (if there is an emulator running)
+        if (_runningEmulatorCancellationSource is not null)
+            _runningEmulatorCancellationSource.Cancel();
+
+        _core = new Cpu(_display, _soundHandler, _keyPad);
+        _display.Clear();
+        _soundHandler.StopSound();
+
+        //
+        _core.LoadRom(RomData);
+        _runningEmulatorCancellationSource = new();
+
+        // Run the emulator on a background thread
+        _runningEmulatorTask = Task.Run(
+            async () =>
+            {
+                try
+                {
+                    await _core.StartEmulator(_runningEmulatorCancellationSource.Token);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.ToString());
+                }
+            });
+
+        // Keep focus on the correct div
+        await _focusDiv.FocusAsync();
+    }
 }

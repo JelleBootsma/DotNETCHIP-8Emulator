@@ -1,6 +1,7 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Chip8EmulationCore;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Chip8EmulationCore.Tests
+namespace Chip8EmulationCoreTests
 {
     [TestClass()]
     public class OpParserTests

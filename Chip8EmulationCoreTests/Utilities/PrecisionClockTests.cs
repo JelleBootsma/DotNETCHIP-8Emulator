@@ -1,8 +1,9 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Chip8EmulationCore.Utilities;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace Chip8EmulationCore.Utilities.Tests
+namespace Chip8EmulationCoreTests.Utilities
 {
     [TestClass()]
     public class PrecisionClockTests

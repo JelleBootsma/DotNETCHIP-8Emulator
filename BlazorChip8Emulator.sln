@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chip8EmulationCore", "Chip8
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Chip8EmulationCoreTests", "Chip8EmulationCoreTests\Chip8EmulationCoreTests.csproj", "{1F182A0B-8ED3-430A-8B38-F2FC4CCC34BE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorExample", "BlazorExample\BlazorExample.csproj", "{2DE457E1-7F22-44FD-A73A-9B5C4F6B7C72}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlazorExample", "BlazorExample\BlazorExample.csproj", "{2DE457E1-7F22-44FD-A73A-9B5C4F6B7C72}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorWasmExample", "BlazorWasmExample\BlazorWasmExample.csproj", "{721F4748-4980-4955-AA54-29D80BC525BB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{2DE457E1-7F22-44FD-A73A-9B5C4F6B7C72}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DE457E1-7F22-44FD-A73A-9B5C4F6B7C72}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2DE457E1-7F22-44FD-A73A-9B5C4F6B7C72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{721F4748-4980-4955-AA54-29D80BC525BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{721F4748-4980-4955-AA54-29D80BC525BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{721F4748-4980-4955-AA54-29D80BC525BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{721F4748-4980-4955-AA54-29D80BC525BB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

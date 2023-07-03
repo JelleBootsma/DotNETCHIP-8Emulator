@@ -8,9 +8,11 @@
     ██████╔╝╚██████╔╝   ██║   ██║ ╚████║███████╗   ██║      ╚██████╗██║  ██║██║██║     ╚█████╔╝
     ╚═════╝  ╚═════╝    ╚═╝   ╚═╝  ╚═══╝╚══════╝   ╚═╝       ╚═════╝╚═╝  ╚═╝╚═╝╚═╝      ╚════╝ 
 </pre>
+@path
 </div>
 <div class="DisplayContainer">
-    <BlazorChip8Emulator.Chip8Emulator RomData="romData" />
+    <!--No background threads support on blazor wasm yet, so we will leave this for now, and use blazor server instead.-->
+    <BlazorChip8Emulator.Chip8Emulator />
 </div>
 <div class="CenterContainer">
     <pre>
@@ -27,20 +29,15 @@ Original Keypad             Mapped Keys
     </pre>
 </div>
 
-@code {
-    private byte[]? romData = null;
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+@code{
+    private string path;
+    protected override Task OnAfterRenderAsync(bool firstRender)
     {
-        await base.OnAfterRenderAsync(firstRender);
-        if (!firstRender)
-            return;
+        if (firstRender)
+        {
+            path = Path.GetFullPath(".");
+        }
 
-        using var file = File.OpenRead(Path.GetFullPath("../chip8-roms/demos/Maze (alt) [David Winter, 199x].ch8"));
-        using var ms = new MemoryStream();
-
-        await file.CopyToAsync(ms);
-        ms.Position = 0;
-        romData = ms.ToArray();
-        StateHasChanged();
+        return base.OnAfterRenderAsync(firstRender);
     }
 }

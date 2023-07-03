@@ -19,7 +19,7 @@ namespace BlazorChip8Emulator
         // +-+-+-+-+          +-+-+-+-+
         // |A|0|B|F|          |Z|X|C|V|
         // +-+-+-+-+          +-+-+-+-+
-        private readonly ReadOnlyDictionary<string, byte> _keyMapping = new ReadOnlyDictionary<string, byte>(new Dictionary<string, byte>()
+        private readonly ReadOnlyDictionary<string, byte> _keyMapping = new(new Dictionary<string, byte>()
         {
             {"1", 0x1 },
             {"2", 0x2 },
@@ -62,15 +62,17 @@ namespace BlazorChip8Emulator
 
         internal void RegisterKeyDown(KeyboardEventArgs e)
         {
-            if (!_keyMapping.ContainsKey(e.Code))
+            string key = e.Key.ToUpperInvariant();
+            if (!_keyMapping.ContainsKey(key))
                 return;
-            _currentlyPressed[e.Key] = true;
-            _nextKeyTask.TrySetResult(_keyMapping[e.Key]);
+            _currentlyPressed[key] = true;
+            _nextKeyTask.TrySetResult(_keyMapping[key]);
         }
         internal void RegisterKeyUp(KeyboardEventArgs e)
         {
-            if (_keyMapping.ContainsKey(e.Key))
-                _currentlyPressed[e.Key] = false;
+            string key = e.Key.ToUpperInvariant();
+            if (_keyMapping.ContainsKey(key))
+                _currentlyPressed[key] = false;
         }
     }
 }

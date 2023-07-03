@@ -3,7 +3,7 @@ using Chip8EmulationCore.Utilities;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading;
 
-namespace Chip8EmulationCore.Tests
+namespace Chip8EmulationCoreTests
 {
     [TestClass()]
     public class TimerTests
