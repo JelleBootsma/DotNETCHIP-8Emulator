@@ -1,3 +1,3 @@
-[submodule "chip8-roms"]
-	path = chip8-roms
+[submodule "BlazorExample/chip8-roms"]
+	path = BlazorExample/chip8-roms
 	url = https://github.com/kripod/chip8-roms.git
