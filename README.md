@@ -1,6 +1,6 @@
 # DotNETCHIP-8Emulator
 
-DotNETCHIP-8Emulator is a Chip8 emulator written in .NET 6. It allows you to run and play games designed for the Chip8 virtual machine. This repository includes a Blazor WebAssembly project that utilizes the emulation core, which is a .NET class library.
+DotNETCHIP-8Emulator is a Chip8 emulator written in .NET 7. It allows you to run and play games designed for the Chip8 virtual machine. This repository includes a Blazor Server project that utilizes the emulation core, which is a .NET class library.
 
 ## Getting Started
 
@@ -8,23 +8,17 @@ To get started with the DotNETCHIP-8Emulator, follow these steps:
 
 1. Clone the repository to your local machine
 
-2. Open the project in your preferred IDE or editor.
+2. Open a terminal and navigate to the BlazorExample folder.
 
-3. Build the project to compile the emulator:
-
-   ```
-   dotnet build
-   ```
-
-4. Run the emulator:
+3. Run the emulator:
 
    ```
    dotnet run
    ```
 
-5. Load a Chip8 ROM file by selecting "Load ROM" from the emulator's menu.
+4. Load a Chip8 ROM file by selecting "Load ROM" from the emulator's menu.
 
-6. Play the game using the keyboard keys mapped to the Chip8 keypad.
+5. Play the game using the keyboard keys mapped to the Chip8 keypad.
 
 ## Controls
 
@@ -56,7 +50,7 @@ The DotNETCHIP-8Emulator provides the following features:
 
 If you encounter any issues while running the DotNETCHIP-8Emulator, try the following:
 
-- Ensure that you have the .NET 6 SDK installed on your machine.
+- Ensure that you have the .NET 7 SDK installed on your machine.
 - Make sure you have the necessary dependencies installed.
 - Check that the ROM file you're trying to load is valid and compatible with the Chip8 emulator.
 
@@ -75,7 +69,7 @@ This project is licensed under the [MIT License](LICENSE). Feel free to use and 
 
 ## Acknowledgements
 
-The DotNETCHIP-8Emulator is inspired by the work of various contributors in the Chip8 community. Special thanks to all the developers who have shared their knowledge and code.
+The DotNETCHIP-8Emulator is made possible due to the extensive Wikipedia description written by contributors in the Chip8 community. Special thanks to all the developers who have shared their knowledge.
 
 ## References
 
